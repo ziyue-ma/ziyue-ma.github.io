@@ -1,37 +1,128 @@
 {% include base_path %}
 
-{% if site.author.github or site.author.bitbucket or site.atom_feed.hide != true %}
-<div class="page__footer-follow">
-  <ul class="social-icons">
-    {% if site.data.ui-text[site.locale].follow_label %}
-      <li><strong>{{ site.data.ui-text[site.locale].follow_label }}</strong></li>
-    {% endif %}
-    {% if site.author.github %}
-      <li><a href="https://github.com/{{ site.author.github }}"><i class="fab fa-github" aria-hidden="true"></i> GitHub</a></li>
-    {% endif %}
-    {% if site.author.bitbucket %}
-      <li><a href="https://bitbucket.org/{{ site.author.bitbucket }}"><i class="fab fa-bitbucket" aria-hidden="true"></i> Bitbucket</a></li>
-    {% endif %}
-    {% if site.atom_feed.hide != true %}
-    <li><a href="{% if site.atom_feed.path %}{{ site.atom_feed.path }}{% else %}{{ base_path }}/feed.xml{% endif %}"><i class="fa fa-fw fa-rss-square" aria-hidden="true"></i> {{ site.data.ui-text[site.locale].feed_label | default: "Feed" }}</a></li>
-    {% endif %}
-  </ul>
-</div>
-{% endif %}
+<style>
+  .site-footer-custom {
+    margin-top: 48px;
+    padding: 38px 20px 28px;
+    background: linear-gradient(135deg, #3b46c5 0%, #4252d6 100%);
+    color: rgba(255, 255, 255, 0.88);
+    text-align: center;
+    font-family: "Avenir Next", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  }
 
-<div class="page__footer-copyright">
-  &copy; {{ site.time | date: '%Y' }} {{ site.name | default: site.title }}, {{ site.data.ui-text[site.locale].powered_by | default: "Powered by" }} <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://github.com/academicpages/academicpages.github.io">AcademicPages</a>, a fork of <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.<br />
-  Site last updated {{ "now" | date: '%Y-%m-%d' }}
-</div>
-<div class="site-stats" style="text-align:center; margin-top:20px; font-size:14px; color:#64748b;">
-  <span id="busuanzi_container_site_pv">
-    总访问量：<span id="busuanzi_value_site_pv"></span>
-  </span>
-  <span style="margin: 0 10px;">|</span>
-  <span id="busuanzi_container_site_uv">
-    访客数：<span id="busuanzi_value_site_uv"></span>
-  </span>
+  .site-footer-inner {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .footer-friends {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.8;
+    letter-spacing: 0.2px;
+    margin-bottom: 18px;
+  }
+
+  .footer-friends-label {
+    font-weight: 700;
+    color: #ffffff;
+    margin-right: 8px;
+  }
+
+  .footer-friends a {
+    color: rgba(255, 255, 255, 0.92);
+    text-decoration: none;
+    transition: opacity 0.2s ease, color 0.2s ease;
+  }
+
+  .footer-friends a:hover {
+    color: #ffffff;
+    opacity: 1;
+    text-decoration: underline;
+  }
+
+  .footer-divider {
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto 22px;
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
+  }
+
+  .page__footer-copyright {
+    font-size: 14px;
+    line-height: 1.9;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .page__footer-copyright a {
+    color: rgba(255, 255, 255, 0.82);
+    text-decoration: none;
+  }
+
+  .page__footer-copyright a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+  }
+
+  .site-stats {
+    margin-top: 14px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.2px;
+  }
+
+  .site-stats span {
+    white-space: nowrap;
+  }
+
+  @media (max-width: 768px) {
+    .site-footer-custom {
+      padding: 30px 16px 24px;
+    }
+
+    .footer-friends {
+      font-size: 14px;
+      line-height: 2;
+    }
+
+    .page__footer-copyright {
+      font-size: 13px;
+    }
+
+    .site-stats {
+      font-size: 12px;
+      line-height: 1.8;
+    }
+  }
+</style>
+
+<div class="site-footer-custom">
+  <div class="site-footer-inner">
+    <div class="footer-friends">
+      <span class="footer-friends-label">友情链接：</span>
+      <a href="#" target="_blank" rel="noopener noreferrer">Ph.D. Chundong Li</a>
+      <span style="margin: 0 10px; opacity: 0.55;">·</span>
+      <a href="https://pengwen-pw.github.io/portfolio/" target="_blank" rel="noopener noreferrer">M.A. Wen Peng</a>
+    </div>
+
+    <hr class="footer-divider" />
+
+    <div class="page__footer-copyright">
+      &copy; {{ site.time | date: '%Y' }} {{ site.name | default: site.title }}. All Rights Reserved.<br />
+      Site last updated {{ "now" | date: '%Y-%m-%d' }}
+    </div>
+
+    <div class="site-stats">
+      <span id="busuanzi_container_site_pv">
+        总访问量：<span id="busuanzi_value_site_pv"></span>
+      </span>
+      <span style="margin: 0 10px; opacity: 0.6;">|</span>
+      <span id="busuanzi_container_site_uv">
+        访客数：<span id="busuanzi_value_site_uv"></span>
+      </span>
+    </div>
+  </div>
 </div>
 
 <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-
