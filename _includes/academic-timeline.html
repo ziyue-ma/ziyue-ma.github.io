@@ -3,11 +3,12 @@
   margin: 42px 0 56px;
 }
 
+/* 标题：与“项目经历 / 技能”统一 */
 .academic-timeline-title {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 34px;
+  gap: 14px;
+  margin: 0 0 34px 0;
   color: #2563eb;
   font-size: 30px;
   font-weight: 800;
@@ -15,18 +16,20 @@
   letter-spacing: 1px;
 }
 
-.academic-title-icon {
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
+/* 学士帽图标 */
+.edu-cap-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transform: translateY(1px);
 }
 
-.academic-title-icon svg {
-  width: 38px;
-  height: 38px;
+.edu-cap-icon svg {
+  width: 34px;
+  height: 34px;
   display: block;
 }
 
@@ -145,6 +148,22 @@
 }
 
 @media (max-width: 768px) {
+  .academic-timeline-title {
+    font-size: 28px;
+    gap: 12px;
+  }
+
+  .edu-cap-icon {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+  }
+
+  .edu-cap-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
   .timeline-line {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -179,17 +198,17 @@
 
 <section class="academic-timeline">
 
-  <h2 class="academic-timeline-title">
-    <span class="academic-title-icon" aria-hidden="true">
+  <div class="academic-timeline-title">
+    <span class="edu-cap-icon" aria-hidden="true">
       <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-        <path fill="#2563eb" d="M32 10 4 24l28 14 28-14L32 10Z"/>
-        <path fill="#2563eb" d="M14 31v9c0 5.5 8.1 10 18 10s18-4.5 18-10v-9L32 40 14 31Z"/>
-        <path fill="#2563eb" d="M54 28v14c0 1.1.9 2 2 2s2-.9 2-2V26l-4 2Z"/>
-        <circle cx="56" cy="47" r="3" fill="#2563eb"/>
+        <path fill="#2563eb" d="M32 11 5 25l27 14 27-14L32 11Z"/>
+        <path fill="#2563eb" d="M15 33v8c0 5.5 7.6 10 17 10s17-4.5 17-10v-8L32 42 15 33Z"/>
+        <path fill="#2563eb" d="M54 28v14.5c0 1.1.9 2 2 2s2-.9 2-2V26l-4 2Z"/>
+        <circle fill="#2563eb" cx="56" cy="48" r="3"/>
       </svg>
     </span>
     <span>教育经历</span>
-  </h2>
+  </div>
 
   <div class="timeline-line">
 
