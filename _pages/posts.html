@@ -122,14 +122,13 @@ author_profile: false
     display: flex;
     align-items: center;
     height: 54px;
-    margin: 0 34px;
+    margin: -1px 34px 0;
     font-size: 12px;
     font-weight: 700;
     color: #262626;
     letter-spacing: 1.2px;
     text-transform: uppercase;
     border-top: 1.5px solid #262626;
-    margin-top: -1px;
   }
 
   .ins-tab i {
@@ -152,6 +151,7 @@ author_profile: false
     background: #f0f0f0;
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.055);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
+    cursor: zoom-in;
   }
 
   .ins-item:hover {
@@ -177,27 +177,11 @@ author_profile: false
     inset: 0;
     background: linear-gradient(
       to bottom,
-      rgba(0, 0, 0, 0.08),
-      rgba(0, 0, 0, 0.42)
+      rgba(0, 0, 0, 0.04),
+      rgba(0, 0, 0, 0.28)
     );
-    display: flex;
-    justify-content: center;
-    align-items: center;
     opacity: 0;
     transition: opacity 0.25s ease;
-    color: #ffffff;
-    font-size: 17px;
-    font-weight: 700;
-  }
-
-  .ins-overlay div {
-    display: flex;
-    align-items: center;
-    margin: 0 14px;
-  }
-
-  .ins-overlay i {
-    margin-right: 8px;
   }
 
   .ins-item:hover .ins-overlay {
@@ -211,6 +195,48 @@ author_profile: false
     padding: 70px 20px;
     color: #999999;
     font-size: 15px;
+  }
+
+  /* 大图预览 */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.86);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .lightbox.active {
+    display: flex;
+  }
+
+  .lightbox img {
+    max-width: 92vw;
+    max-height: 88vh;
+    object-fit: contain;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+  }
+
+  .lightbox-close {
+    position: fixed;
+    top: 22px;
+    right: 30px;
+    z-index: 10000;
+    color: #ffffff;
+    font-size: 42px;
+    font-weight: 200;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .lightbox-close:hover {
+    opacity: 0.75;
   }
 
   /* 手机端 */
@@ -278,6 +304,22 @@ author_profile: false
     .ins-overlay {
       display: none;
     }
+
+    .lightbox {
+      padding: 14px;
+    }
+
+    .lightbox img {
+      max-width: 94vw;
+      max-height: 84vh;
+      border-radius: 10px;
+    }
+
+    .lightbox-close {
+      top: 14px;
+      right: 20px;
+      font-size: 38px;
+    }
   }
 </style>
 
@@ -286,7 +328,7 @@ author_profile: false
   <div class="ins-header">
     <div class="ins-avatar-box">
       <div class="ins-avatar-ring">
-        <img src="{{ base_path }}/images/profile.png" class="ins-avatar" alt="Avatar">
+        <img src="{{ '/images/profile.png' | relative_url }}" class="ins-avatar" alt="Avatar">
       </div>
     </div>
 
@@ -306,7 +348,9 @@ author_profile: false
 
   <!-- 导航栏：只保留 POSTS -->
   <div class="ins-tabs">
-    <div class="ins-tab"><i class="fas fa-th"></i> POSTS</div>
+    <div class="ins-tab">
+      <i class="fas fa-th"></i> POSTS
+    </div>
   </div>
 
   <!-- 照片墙网格 -->
@@ -316,12 +360,15 @@ author_profile: false
     {% for post in site.posts %}
       {% if post.cover_image %}
         {% assign has_posts = true %}
-        <a href="{{ base_path }}{{ post.url }}" class="ins-item">
-          <img src="{{ base_path }}{{ post.cover_image }}" alt="{{ post.title }}">
-          <div class="ins-overlay">
-            
-          </div>
-        </a>
+
+        <div 
+          class="ins-item" 
+          onclick="openLightbox('{{ post.cover_image | relative_url }}')"
+        >
+          <img src="{{ post.cover_image | relative_url }}" alt="{{ post.title }}">
+          <div class="ins-overlay"></div>
+        </div>
+
       {% endif %}
     {% endfor %}
 
@@ -332,3 +379,35 @@ author_profile: false
     {% endunless %}
   </div>
 </div>
+
+<!-- 大图预览 -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <span class="lightbox-close" onclick="closeLightbox()">×</span>
+  <img id="lightbox-img" src="" alt="Preview" onclick="event.stopPropagation()">
+</div>
+
+<script>
+  function openLightbox(src) {
+    var lightbox = document.getElementById('lightbox');
+    var lightboxImg = document.getElementById('lightbox-img');
+
+    lightboxImg.src = src;
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    var lightbox = document.getElementById('lightbox');
+    var lightboxImg = document.getElementById('lightbox-img');
+
+    lightbox.classList.remove('active');
+    lightboxImg.src = '';
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      closeLightbox();
+    }
+  });
+</script>
