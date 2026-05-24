@@ -99,15 +99,11 @@ author_profile: true
 
       <div class="resource-actions">
         {% if post.download_url %}
-          <a href="{{ base_path }}{{ post.download_url }}" class="btn-soft" download>
-            <i class="fas fa-download"></i> 下载
-          </a>
-        {% elsif post.dataset_url %}
-          <a href="{{ base_path }}{{ post.dataset_url }}" class="btn-soft" download>
-            <i class="fas fa-download"></i> 下载
-          </a>
-        {% elsif post.ppt_url %}
-          <a href="{{ base_path }}{{ post.ppt_url }}" class="btn-soft" download>
+          <a
+            href="{{ post.download_url | relative_url }}"
+            class="btn-soft"
+            download
+          >
             <i class="fas fa-download"></i> 下载
           </a>
         {% endif %}
