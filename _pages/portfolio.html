@@ -51,25 +51,28 @@ author_profile: true
   .btn-soft {
     display: inline-flex;
     align-items: center;
-    padding: 6px 14px;
-    font-size: 0.85rem;
+    justify-content: center;
+    padding: 8px 16px;
+    font-size: 0.9rem;
     font-weight: 500;
     color: #0969da;
     background-color: #ddf4ff;
     border-radius: 6px;
     text-decoration: none;
     transition: all 0.2s ease-in-out;
-  }
-
-  .btn-soft i {
-    margin-right: 6px;
-    font-size: 0.9em;
+    white-space: nowrap;
   }
 
   .btn-soft:hover {
     background-color: #0969da;
     color: #ffffff;
     text-decoration: none;
+  }
+
+  .btn-disabled {
+    color: #6b7280;
+    background-color: #f3f4f6;
+    cursor: not-allowed;
   }
 
   @media (max-width: 600px) {
@@ -87,6 +90,7 @@ author_profile: true
 
 <div class="resource-list">
   {% for post in site.portfolio %}
+    {% assign file_url = post.download_url | default: post.dataset_url | default: post.ppt_url %}
     <div class="resource-item">
       <div class="resource-content">
         <h3 class="resource-title">{{ post.title }}</h3>
@@ -98,14 +102,12 @@ author_profile: true
       </div>
 
       <div class="resource-actions">
-        {% if post.download_url %}
-          <a
-            href="{{ post.download_url | relative_url }}"
-            class="btn-soft"
-            download
-          >
-            <i class="fas fa-download"></i> 下载
+        {% if file_url %}
+          <a href="{{ file_url | relative_url }}" class="btn-soft" download>
+            下载
           </a>
+        {% else %}
+          <span class="btn-soft btn-disabled">暂无下载</span>
         {% endif %}
       </div>
     </div>
