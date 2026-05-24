@@ -21,12 +21,14 @@ author_profile: true
 
 <div
   id="network-container"
-  style="width: 100%; height: 400px; background-color: #eff6ff; border-radius: 12px; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #666;"
+  style="width: 100%; height: 430px; background-color: #eff6ff; border-radius: 12px; margin-bottom: 30px; position: relative; overflow: hidden; font-size: 14px; color: #666;"
 >
-  图谱加载中，请稍候...
+  <div id="network-loading" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+    图谱加载中，请稍候...
+  </div>
 </div>
 
-<!-- 从 _publications/*.md 的 authors 字段中读取作者数据 -->
+<!-- 从 _publications/*.md 的 authors 字段读取作者数据 -->
 <div id="author-data-store" style="display: none;">
   {% for post in site.publications %}
     {% if post.authors %}
@@ -37,53 +39,19 @@ author_profile: true
 
 <script>
 (function () {
-  var chartDom = document.getElementById("network-container");
-
-  function showMessage(text, color) {
-    if (!chartDom) return;
-    chartDom.innerHTML = "<span style='color:" + (color || "#666") + ";'>" + text + "</span>";
-  }
-
-  function loadECharts(callback) {
-    if (window.echarts) {
-      callback();
-      return;
-    }
-
-    var cdnList = [
-      "https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js",
-      "https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js",
-      "https://unpkg.com/echarts@5.5.0/dist/echarts.min.js"
-    ];
-
-    var index = 0;
-
-    function tryNextCDN() {
-      if (index >= cdnList.length) {
-        showMessage("ECharts 加载失败，请检查网络或 CDN。", "red");
-        return;
-      }
-
-      var script = document.createElement("script");
-      script.src = cdnList[index];
-      script.onload = callback;
-      script.onerror = function () {
-        index++;
-        tryNextCDN();
-      };
-
-      document.head.appendChild(script);
-    }
-
-    tryNextCDN();
-  }
-
   function drawNetwork() {
-    if (!chartDom) return;
+    var container = document.getElementById("network-container");
+    var loading = document.getElementById("network-loading");
 
-    if (typeof echarts === "undefined") {
-      showMessage("画图工具加载失败，请刷新重试。", "red");
-      return;
+    if (!container) return;
+
+    function showMessage(text, color) {
+      container.innerHTML =
+        "<div style='position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:" +
+        (color || "#666") +
+        ";'>" +
+        text +
+        "</div>";
     }
 
     var authorElements = document.querySelectorAll("#author-data-store .author-item");
@@ -97,35 +65,37 @@ author_profile: true
     });
 
     if (paperAuthors.length === 0) {
-      showMessage("尚未读取到合作者数据，请检查论文 md 文件是否添加了 authors 字段。");
+      showMessage("尚未读取到合作者数据，请检查论文 md 文件是否添加了 authors 字段。", "#666");
       return;
     }
 
-    // 这里改成你自己的中心作者姓名
+    // 这里改成你的中心作者姓名
     var mainAuthor = "马梓越";
 
-    var nodesSet = new Set([mainAuthor]);
     var linksMap = {};
+    var allAuthors = new Set();
+    allAuthors.add(mainAuthor);
 
     paperAuthors.forEach(function (authorsStr) {
       var authors = authorsStr
         .split(/[,，;；、]/)
-        .map(function (a) {
-          return a.trim();
+        .map(function (name) {
+          return name.trim();
         })
-        .filter(function (a) {
+        .filter(function (name) {
+          var lower = name.toLowerCase();
           return (
-            a &&
-            a !== "等" &&
-            a !== "等." &&
-            a !== "等。" &&
-            a.toLowerCase() !== "et al." &&
-            a.toLowerCase() !== "et al"
+            name &&
+            name !== "等" &&
+            name !== "等." &&
+            name !== "等。" &&
+            lower !== "et al." &&
+            lower !== "et al"
           );
         });
 
       authors.forEach(function (author) {
-        nodesSet.add(author);
+        allAuthors.add(author);
 
         if (author !== mainAuthor) {
           linksMap[author] = (linksMap[author] || 0) + 1;
@@ -133,122 +103,204 @@ author_profile: true
       });
     });
 
-    var collaboratorNames = Object.keys(linksMap);
+    var collaborators = Object.keys(linksMap);
 
-    if (collaboratorNames.length === 0) {
-      showMessage("读取到了 authors 字段，但没有识别到合作者。请检查 authors 是否用逗号分隔。");
+    if (collaborators.length === 0) {
+      showMessage("读取到了 authors 字段，但没有识别到合作者。请检查 authors 是否包含“马梓越, 合作者”这种格式。", "#666");
       return;
     }
 
     var maxCount = 1;
-
-    collaboratorNames.forEach(function (name) {
+    collaborators.forEach(function (name) {
       if (linksMap[name] > maxCount) {
         maxCount = linksMap[name];
       }
     });
 
-    var graphNodes = Array.from(nodesSet).map(function (name) {
-      var count = linksMap[name] || 0;
+    var width = container.clientWidth || 900;
+    var height = container.clientHeight || 430;
+    var centerX = width / 2;
+    var centerY = height / 2;
+    var radius = Math.min(width, height) * 0.34;
 
-      return {
-        name: name,
-        symbolSize: name === mainAuthor ? 55 : Math.min(48, 26 + count * 5),
-        itemStyle: {
-          color: name === mainAuthor ? "#e83e8c" : "#2563eb"
-        }
+    container.innerHTML = "";
+
+    var svgNS = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(svgNS, "svg");
+
+    svg.setAttribute("width", "100%");
+    svg.setAttribute("height", "100%");
+    svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+    svg.style.display = "block";
+
+    var tooltip = document.createElement("div");
+    tooltip.style.position = "absolute";
+    tooltip.style.display = "none";
+    tooltip.style.padding = "6px 10px";
+    tooltip.style.background = "rgba(0, 0, 0, 0.75)";
+    tooltip.style.color = "#fff";
+    tooltip.style.borderRadius = "6px";
+    tooltip.style.fontSize = "13px";
+    tooltip.style.pointerEvents = "none";
+    tooltip.style.zIndex = "10";
+
+    container.appendChild(svg);
+    container.appendChild(tooltip);
+
+    function showTooltip(event, text) {
+      tooltip.innerHTML = text;
+      tooltip.style.display = "block";
+      tooltip.style.left = event.offsetX + 12 + "px";
+      tooltip.style.top = event.offsetY + 12 + "px";
+    }
+
+    function hideTooltip() {
+      tooltip.style.display = "none";
+    }
+
+    var positions = {};
+
+    positions[mainAuthor] = {
+      x: centerX,
+      y: centerY
+    };
+
+    collaborators.forEach(function (name, index) {
+      var angle = (2 * Math.PI * index) / collaborators.length - Math.PI / 2;
+
+      positions[name] = {
+        x: centerX + radius * Math.cos(angle),
+        y: centerY + radius * Math.sin(angle)
       };
     });
 
-    var graphLinks = collaboratorNames.map(function (target) {
-      var count = linksMap[target];
+    // 先画线
+    collaborators.forEach(function (name) {
+      var count = linksMap[name];
 
       // 根据合作次数决定线条粗细
-      // 合作次数越多，线越粗；最细 2.5，最粗 10
-      var width = 2.5 + (count / maxCount) * 7.5;
+      // 合作越多，线越粗
+      var lineWidth = 2 + (count / maxCount) * 8;
 
-      return {
-        source: mainAuthor,
-        target: target,
-        value: count,
-        lineStyle: {
-          width: width,
-          color: "#666",
-          opacity: 0.75,
-          curveness: 0.2
-        }
-      };
+      var line = document.createElementNS(svgNS, "line");
+      line.setAttribute("x1", positions[mainAuthor].x);
+      line.setAttribute("y1", positions[mainAuthor].y);
+      line.setAttribute("x2", positions[name].x);
+      line.setAttribute("y2", positions[name].y);
+      line.setAttribute("stroke", "#64748b");
+      line.setAttribute("stroke-width", lineWidth);
+      line.setAttribute("stroke-opacity", "0.65");
+      line.setAttribute("stroke-linecap", "round");
+
+      line.addEventListener("mousemove", function (event) {
+        showTooltip(event, mainAuthor + " ↔ " + name + "<br>合作次数：" + count);
+      });
+
+      line.addEventListener("mouseleave", hideTooltip);
+
+      svg.appendChild(line);
     });
 
-    chartDom.innerHTML = "";
-    chartDom.style.display = "block";
+    // 再画中心作者节点
+    var centerCircle = document.createElementNS(svgNS, "circle");
+    centerCircle.setAttribute("cx", centerX);
+    centerCircle.setAttribute("cy", centerY);
+    centerCircle.setAttribute("r", 32);
+    centerCircle.setAttribute("fill", "#e83e8c");
+    centerCircle.setAttribute("stroke", "#ffffff");
+    centerCircle.setAttribute("stroke-width", "4");
 
-    var myChart = echarts.init(chartDom);
-
-    myChart.setOption({
-      tooltip: {
-        formatter: function (params) {
-          if (params.dataType === "edge") {
-            return (
-              params.data.source +
-              " ↔ " +
-              params.data.target +
-              "<br/>合作次数：" +
-              params.data.value
-            );
-          }
-
-          if (params.name === mainAuthor) {
-            return params.name + "<br/>中心作者";
-          }
-
-          return params.name + "<br/>合作次数：" + (linksMap[params.name] || 0);
-        }
-      },
-      series: [
-        {
-          type: "graph",
-          layout: "force",
-          roam: true,
-          draggable: true,
-          label: {
-            show: true,
-            position: "right",
-            fontSize: 14,
-            fontWeight: "bold"
-          },
-          force: {
-            repulsion: 650,
-            edgeLength: 150
-          },
-          data: graphNodes,
-          links: graphLinks,
-          lineStyle: {
-            color: "#999",
-            curveness: 0.2
-          },
-          emphasis: {
-            focus: "adjacency",
-            lineStyle: {
-              opacity: 1
-            }
-          }
-        }
-      ]
+    centerCircle.addEventListener("mousemove", function (event) {
+      showTooltip(event, mainAuthor + "<br>中心作者");
     });
 
-    window.addEventListener("resize", function () {
-      myChart.resize();
+    centerCircle.addEventListener("mouseleave", hideTooltip);
+
+    svg.appendChild(centerCircle);
+
+    var centerText = document.createElementNS(svgNS, "text");
+    centerText.setAttribute("x", centerX);
+    centerText.setAttribute("y", centerY + 52);
+    centerText.setAttribute("text-anchor", "middle");
+    centerText.setAttribute("font-size", "15");
+    centerText.setAttribute("font-weight", "bold");
+    centerText.setAttribute("fill", "#334155");
+    centerText.textContent = mainAuthor;
+    svg.appendChild(centerText);
+
+    // 画合作者节点
+    collaborators.forEach(function (name) {
+      var count = linksMap[name];
+      var pos = positions[name];
+
+      var nodeSize = Math.min(28, 14 + count * 3);
+
+      var circle = document.createElementNS(svgNS, "circle");
+      circle.setAttribute("cx", pos.x);
+      circle.setAttribute("cy", pos.y);
+      circle.setAttribute("r", nodeSize);
+      circle.setAttribute("fill", "#2563eb");
+      circle.setAttribute("stroke", "#ffffff");
+      circle.setAttribute("stroke-width", "3");
+
+      circle.addEventListener("mousemove", function (event) {
+        showTooltip(event, name + "<br>合作次数：" + count);
+      });
+
+      circle.addEventListener("mouseleave", hideTooltip);
+
+      svg.appendChild(circle);
+
+      var label = document.createElementNS(svgNS, "text");
+      label.setAttribute("x", pos.x);
+      label.setAttribute("y", pos.y + nodeSize + 18);
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("font-size", "13");
+      label.setAttribute("font-weight", "bold");
+      label.setAttribute("fill", "#334155");
+      label.textContent = name;
+
+      svg.appendChild(label);
+
+      var countText = document.createElementNS(svgNS, "text");
+      countText.setAttribute("x", pos.x);
+      countText.setAttribute("y", pos.y + 4);
+      countText.setAttribute("text-anchor", "middle");
+      countText.setAttribute("font-size", "12");
+      countText.setAttribute("font-weight", "bold");
+      countText.setAttribute("fill", "#ffffff");
+      countText.textContent = count;
+
+      svg.appendChild(countText);
     });
+
+    // 图例
+    var legend = document.createElement("div");
+    legend.style.position = "absolute";
+    legend.style.right = "16px";
+    legend.style.bottom = "12px";
+    legend.style.fontSize = "13px";
+    legend.style.color = "#475569";
+    legend.style.background = "rgba(255,255,255,0.75)";
+    legend.style.padding = "6px 10px";
+    legend.style.borderRadius = "8px";
+    legend.innerHTML = "线越粗 = 合作次数越多；节点数字 = 合作次数";
+
+    container.appendChild(legend);
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function () {
-      loadECharts(drawNetwork);
-    });
+    document.addEventListener("DOMContentLoaded", drawNetwork);
   } else {
-    loadECharts(drawNetwork);
+    drawNetwork();
   }
+
+  window.addEventListener("resize", function () {
+    var container = document.getElementById("network-container");
+    if (container) {
+      drawNetwork();
+    }
+  });
 })();
 </script>
 <!-- ⬆️ 学术社交网络图谱区域 ⬆️ -->
