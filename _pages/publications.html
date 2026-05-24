@@ -6,145 +6,269 @@ author_profile: true
 ---
 
 {% if site.author.googlescholar %}
-  <div class="wordwrap">You can also find my articles on <a href="{{site.author.googlescholar}}">my Google Scholar profile</a>.</div>
+  <div class="wordwrap">
+    You can also find my articles on
+    <a href="{{ site.author.googlescholar }}">my Google Scholar profile</a>.
+  </div>
 {% endif %}
 
 {% include base_path %}
 
 <!-- ⬇️ 学术社交网络图谱区域 ⬇️ -->
-<h2 style="color: #2563eb; font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px;">🌐 合作者网络</h2>
+<h2 style="color: #2563eb; font-family: 'Arial Black', Impact, sans-serif; letter-spacing: 1px;">
+  🌐 合作者网络
+</h2>
 
-<div id="network-container" style="width: 100%; height: 400px; background-color: #eff6ff; border-radius: 12px; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #666;">图谱加载中，请稍候...</div>
-<div id="author-data-store" style="display: none;">{% for post in site.publications %}{% if post.authors %}<span class="author-item">{{ post.authors }}</span>{% endif %}{% endfor %}</div>
+<div
+  id="network-container"
+  style="width: 100%; height: 400px; background-color: #eff6ff; border-radius: 12px; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #666;"
+>
+  图谱加载中，请稍候...
+</div>
 
-<script src="https://cdn.staticfile.net/echarts/5.5.0/echarts.min.js"></script>
-<script src="https://cdn.staticfile.net/echarts/5.5.0/echarts.min.js"></script>
+<!-- 从 _publications/*.md 的 authors 字段中读取作者数据 -->
+<div id="author-data-store" style="display: none;">
+  {% for post in site.publications %}
+    {% if post.authors %}
+      <span class="author-item">{{ post.authors | strip_html | escape }}</span>
+    {% endif %}
+  {% endfor %}
+</div>
+
 <script>
-setTimeout(function(){
-  var chartDom = document.getElementById('network-container');
+(function () {
+  var chartDom = document.getElementById("network-container");
 
-  if(typeof echarts === 'undefined'){
-    chartDom.innerHTML = "<span style='color:red;'>画图工具加载失败，请刷新重试。</span>";
-    return;
+  function showMessage(text, color) {
+    if (!chartDom) return;
+    chartDom.innerHTML = "<span style='color:" + (color || "#666") + ";'>" + text + "</span>";
   }
 
-  var authorElements = document.querySelectorAll('.author-item');
-  var paperAuthors = [];
-
-  authorElements.forEach(function(el){
-    if(el.innerText.trim() !== '') {
-      paperAuthors.push(el.innerText.trim());
+  function loadECharts(callback) {
+    if (window.echarts) {
+      callback();
+      return;
     }
-  });
 
-  if(paperAuthors.length === 0){
-    chartDom.innerHTML = "尚未读取到合作者数据，请检查论文md文件是否添加了 authors 字段";
-    return;
+    var cdnList = [
+      "https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js",
+      "https://unpkg.com/echarts@5.5.0/dist/echarts.min.js"
+    ];
+
+    var index = 0;
+
+    function tryNextCDN() {
+      if (index >= cdnList.length) {
+        showMessage("ECharts 加载失败，请检查网络或 CDN。", "red");
+        return;
+      }
+
+      var script = document.createElement("script");
+      script.src = cdnList[index];
+      script.onload = callback;
+      script.onerror = function () {
+        index++;
+        tryNextCDN();
+      };
+
+      document.head.appendChild(script);
+    }
+
+    tryNextCDN();
   }
 
-  const mainAuthor = "马梓越";
+  function drawNetwork() {
+    if (!chartDom) return;
 
-  let nodesSet = new Set([mainAuthor]);
-  let linksMap = {};
+    if (typeof echarts === "undefined") {
+      showMessage("画图工具加载失败，请刷新重试。", "red");
+      return;
+    }
 
-  paperAuthors.forEach(authorsStr => {
-    let authors = authorsStr
-      .split(/[,，]/)
-      .map(a => a.trim())
-      .filter(a => a);
+    var authorElements = document.querySelectorAll("#author-data-store .author-item");
+    var paperAuthors = [];
 
-    authors.forEach(author => {
-      nodesSet.add(author);
-
-      if (author !== mainAuthor) {
-        linksMap[author] = (linksMap[author] || 0) + 1;
+    authorElements.forEach(function (el) {
+      var text = el.textContent.trim();
+      if (text !== "") {
+        paperAuthors.push(text);
       }
     });
-  });
 
-  let graphNodes = Array.from(nodesSet).map(name => ({
-    name: name,
-    symbolSize: name === mainAuthor ? 50 : 30,
-    itemStyle: {
-      color: name === mainAuthor ? '#e83e8c' : '#2563eb'
+    if (paperAuthors.length === 0) {
+      showMessage("尚未读取到合作者数据，请检查论文 md 文件是否添加了 authors 字段。");
+      return;
     }
-  }));
 
-  // 根据合作次数设置线条粗细
-  // 合作 1 次：较细；合作越多：越粗；最大限制为 10，避免太夸张
-  let graphLinks = Object.keys(linksMap).map(target => {
-    let count = linksMap[target];
-    let width = Math.min(10, 1.5 + count * 1.5);
+    // 这里改成你自己的中心作者姓名
+    var mainAuthor = "马梓越";
 
-    return {
-      source: mainAuthor,
-      target: target,
-      value: count,
-      lineStyle: {
-        width: width,
-        color: '#666',
-        opacity: 0.75,
-        curveness: 0.2
-      }
-    };
-  });
+    var nodesSet = new Set([mainAuthor]);
+    var linksMap = {};
 
-  chartDom.innerHTML = "";
+    paperAuthors.forEach(function (authorsStr) {
+      var authors = authorsStr
+        .split(/[,，;；、]/)
+        .map(function (a) {
+          return a.trim();
+        })
+        .filter(function (a) {
+          return (
+            a &&
+            a !== "等" &&
+            a !== "等." &&
+            a !== "等。" &&
+            a.toLowerCase() !== "et al." &&
+            a.toLowerCase() !== "et al"
+          );
+        });
 
-  var myChart = echarts.init(chartDom);
+      authors.forEach(function (author) {
+        nodesSet.add(author);
 
-  myChart.setOption({
-    tooltip: {
-      formatter: function(params) {
-        if (params.dataType === 'edge') {
-          return params.data.source + ' ↔ ' + params.data.target + '<br/>合作次数：' + params.data.value;
+        if (author !== mainAuthor) {
+          linksMap[author] = (linksMap[author] || 0) + 1;
         }
-        return params.name;
-      }
-    },
-    series: [{
-      type: 'graph',
-      layout: 'force',
-      roam: true,
-      label: {
-        show: true,
-        position: 'right',
-        fontSize: 14,
-        fontWeight: 'bold'
-      },
-      force: {
-        repulsion: 600,
-        edgeLength: 150
-      },
-      data: graphNodes,
-      links: graphLinks,
-      lineStyle: {
-        color: '#999',
-        curveness: 0.2
-      }
-    }]
-  });
+      });
+    });
 
-  window.addEventListener('resize', function() {
-    myChart.resize();
-  });
+    var collaboratorNames = Object.keys(linksMap);
 
-}, 800);
+    if (collaboratorNames.length === 0) {
+      showMessage("读取到了 authors 字段，但没有识别到合作者。请检查 authors 是否用逗号分隔。");
+      return;
+    }
+
+    var maxCount = 1;
+
+    collaboratorNames.forEach(function (name) {
+      if (linksMap[name] > maxCount) {
+        maxCount = linksMap[name];
+      }
+    });
+
+    var graphNodes = Array.from(nodesSet).map(function (name) {
+      var count = linksMap[name] || 0;
+
+      return {
+        name: name,
+        symbolSize: name === mainAuthor ? 55 : Math.min(48, 26 + count * 5),
+        itemStyle: {
+          color: name === mainAuthor ? "#e83e8c" : "#2563eb"
+        }
+      };
+    });
+
+    var graphLinks = collaboratorNames.map(function (target) {
+      var count = linksMap[target];
+
+      // 根据合作次数决定线条粗细
+      // 合作次数越多，线越粗；最细 2.5，最粗 10
+      var width = 2.5 + (count / maxCount) * 7.5;
+
+      return {
+        source: mainAuthor,
+        target: target,
+        value: count,
+        lineStyle: {
+          width: width,
+          color: "#666",
+          opacity: 0.75,
+          curveness: 0.2
+        }
+      };
+    });
+
+    chartDom.innerHTML = "";
+    chartDom.style.display = "block";
+
+    var myChart = echarts.init(chartDom);
+
+    myChart.setOption({
+      tooltip: {
+        formatter: function (params) {
+          if (params.dataType === "edge") {
+            return (
+              params.data.source +
+              " ↔ " +
+              params.data.target +
+              "<br/>合作次数：" +
+              params.data.value
+            );
+          }
+
+          if (params.name === mainAuthor) {
+            return params.name + "<br/>中心作者";
+          }
+
+          return params.name + "<br/>合作次数：" + (linksMap[params.name] || 0);
+        }
+      },
+      series: [
+        {
+          type: "graph",
+          layout: "force",
+          roam: true,
+          draggable: true,
+          label: {
+            show: true,
+            position: "right",
+            fontSize: 14,
+            fontWeight: "bold"
+          },
+          force: {
+            repulsion: 650,
+            edgeLength: 150
+          },
+          data: graphNodes,
+          links: graphLinks,
+          lineStyle: {
+            color: "#999",
+            curveness: 0.2
+          },
+          emphasis: {
+            focus: "adjacency",
+            lineStyle: {
+              opacity: 1
+            }
+          }
+        }
+      ]
+    });
+
+    window.addEventListener("resize", function () {
+      myChart.resize();
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      loadECharts(drawNetwork);
+    });
+  } else {
+    loadECharts(drawNetwork);
+  }
+})();
 </script>
-
 <!-- ⬆️ 学术社交网络图谱区域 ⬆️ -->
-<!-- 原有的论文列表渲染逻辑（保持不变） -->
+
+<!-- 原有的论文列表渲染逻辑 -->
 {% if site.publication_category %}
-  {% for category in site.publication_category  %}
+  {% for category in site.publication_category %}
     {% assign title_shown = false %}
+
     {% for post in site.publications reversed %}
       {% if post.category != category[0] %}
         {% continue %}
       {% endif %}
+
       {% unless title_shown %}
-        <h2>{{ category[1].title }}</h2><hr />
+        <h2>{{ category[1].title }}</h2>
+        <hr />
         {% assign title_shown = true %}
       {% endunless %}
+
       {% include archive-single.html %}
     {% endfor %}
   {% endfor %}
