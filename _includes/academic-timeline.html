@@ -3,24 +3,24 @@
   margin: 42px 0 56px;
 }
 
-/* 标题：与“项目经历 / 技能”统一 */
+/* 标题：与“项目经历 / 技能”更协调 */
 .academic-timeline-title {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin: 0 0 34px 0;
+  gap: 12px;
+  margin: 0 0 28px 0;
   color: #2563eb;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   line-height: 1.2;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 /* 学士帽图标 */
 .edu-cap-icon {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -28,8 +28,8 @@
 }
 
 .edu-cap-icon svg {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   display: block;
 }
 
@@ -149,19 +149,20 @@
 
 @media (max-width: 768px) {
   .academic-timeline-title {
-    font-size: 28px;
-    gap: 12px;
+    font-size: 22px;
+    gap: 10px;
+    margin-bottom: 24px;
   }
 
   .edu-cap-icon {
-    width: 32px;
-    height: 32px;
-    flex-basis: 32px;
+    width: 28px;
+    height: 28px;
+    flex-basis: 28px;
   }
 
   .edu-cap-icon svg {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
   }
 
   .timeline-line {
@@ -197,7 +198,6 @@
 </style>
 
 <section class="academic-timeline">
-
   <div class="academic-timeline-title">
     <span class="edu-cap-icon" aria-hidden="true">
       <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
@@ -211,10 +211,8 @@
   </div>
 
   <div class="timeline-line">
-
     <div class="timeline-item">
       <div class="timeline-dot"></div>
-
       <div class="timeline-card">
         <img class="timeline-logo" src="/images/hbu.jpg" alt="Hebei University logo">
         <div class="timeline-year">2019 - 2023</div>
@@ -225,7 +223,6 @@
 
     <div class="timeline-item">
       <div class="timeline-dot"></div>
-
       <div class="timeline-card">
         <img class="timeline-logo" src="/images/cas.jpg" alt="Chinese Academy of Sciences logo">
         <div class="timeline-year">2023 - 2026</div>
@@ -236,7 +233,6 @@
 
     <div class="timeline-item">
       <div class="timeline-dot"></div>
-
       <div class="timeline-card">
         <img class="timeline-logo" src="/images/whu.jpg" alt="Wuhan University logo">
         <div class="timeline-year">2026 - Present</div>
@@ -244,7 +240,5 @@
         <div class="timeline-school">武汉大学 · 信息管理学院</div>
       </div>
     </div>
-
   </div>
-
 </section>
